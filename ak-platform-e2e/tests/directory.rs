@@ -1,12 +1,13 @@
+#![cfg(unix)]
+
 use ak_platform_e2e::{
     CmdTestCase, TestMachine, cleanup_hosts, cmd_test, join_domain, must_exec, test_init,
 };
-use testcontainers::{ContainerAsync, GenericImage};
 
 /// Returns the third colon-separated field (UID or GID) for the given key
 /// from `getent` style output.
-async fn getent_lookup(container: &ContainerAsync<GenericImage>, cmd: &str, key: &str) -> String {
-    let output = must_exec(container, cmd, &[]).await.expect("getent");
+async fn getent_lookup(tm: &TestMachine, cmd: &str, key: &str) -> String {
+    let output = must_exec(tm, cmd, &[]).await.expect("getent");
     for line in output.lines() {
         let parts: Vec<&str> = line.split(':').collect();
         if parts.first().copied() == Some(key) && parts.len() > 2 {

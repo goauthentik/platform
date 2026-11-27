@@ -158,6 +158,7 @@ Requirements: Docker.
 
 #### `containers/e2e/%`
 
-End-to-end test Docker container.
+Builds the instrumented packages for the end-to-end tests, which run in Incus VMs
+(`build-packages`).
 
-Requirements: Docker.
+Requirements: Incus with KVM, and access to its socket (`incus-admin` group).

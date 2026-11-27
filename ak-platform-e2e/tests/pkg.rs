@@ -1,5 +1,28 @@
-use ak_platform_e2e::{lookup_repo_dir, must_exec, test_init};
+#![cfg(unix)]
+
+//! Package install smoke tests across distros. These stay on plain containers:
+//! they only need a package manager, not systemd or a real kernel.
+
+use ak_platform_e2e::{lookup_repo_dir, test_init};
+use testcontainers::core::{CmdWaitFor, ExecCommand};
 use testcontainers::{ContainerAsync, GenericImage, ImageExt, core::Mount, runners::AsyncRunner};
+
+async fn must_exec(container: &ContainerAsync<GenericImage>, cmd: &str) -> Result<String, String> {
+    let exec = ExecCommand::new(["sh", "-c", cmd])
+        .with_cmd_ready_condition(CmdWaitFor::Exit { code: None });
+    let mut result = container.exec(exec).await.map_err(|e| e.to_string())?;
+    let stdout = result.stdout_to_vec().await.map_err(|e| e.to_string())?;
+    let stderr = result.stderr_to_vec().await.map_err(|e| e.to_string())?;
+    let output = format!(
+        "{}{}",
+        String::from_utf8_lossy(&stdout),
+        String::from_utf8_lossy(&stderr)
+    );
+    match result.exit_code().await.map_err(|e| e.to_string())? {
+        Some(0) => Ok(output),
+        code => Err(format!("exited with {code:?}: {output}")),
+    }
+}
 
 async fn pkg_container(image: &str, tag: &str, bin_dir: &str) -> ContainerAsync<GenericImage> {
     GenericImage::new(image, tag)
@@ -31,7 +54,7 @@ async fn test_packaging_deb() {
             "/tmp/ak-bin/pam/*.deb",
             "/tmp/ak-bin/nss/*.deb",
         ] {
-            must_exec(&container, &format!("dpkg -i {}", pkg), &[])
+            must_exec(&container, &format!("dpkg -i {}", pkg))
                 .await
                 .unwrap_or_else(|e| panic!("dpkg install {} on {}/{}: {}", pkg, image, tag, e));
         }
@@ -57,7 +80,7 @@ async fn test_packaging_rpm() {
             "/tmp/ak-bin/nss/*.rpm",
             "/tmp/ak-bin/pam/*.rpm",
         ] {
-            must_exec(&container, &format!("yum install -y {}", pkg), &[])
+            must_exec(&container, &format!("yum install -y {}", pkg))
                 .await
                 .unwrap_or_else(|e| panic!("yum install {} on {}/{}: {}", pkg, image, tag, e));
         }

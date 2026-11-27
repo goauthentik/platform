@@ -129,7 +129,7 @@ lint:$(foreach target,$(TARGETS),${target}/lint)
 test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
 
-test-e2e: containers/e2e/local-build
+test-e2e: containers/e2e/build-packages
 	$(call cargo_test,ak-platform-e2e)
 
 test-e2e-ci:

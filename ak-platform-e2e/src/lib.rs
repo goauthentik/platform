@@ -1,3 +1,6 @@
+//! VM-based e2e harness (Incus), so Unix-only.
+#![cfg(unix)]
+
 use std::{env, path::PathBuf, time::Duration};
 
 use ak_flow_executor::executor::FlowExecutor;
@@ -7,11 +10,10 @@ use ak_platform::oauth::device_flow::{poll_for_device_token, request_device_auth
 use ak_platform::string::PlatformString;
 use authentik_client::apis::{configuration::Configuration as AkConfig, endpoints_api};
 use eyre::{Context, ContextCompat, Result, bail};
-use testcontainers::core::CmdWaitFor;
-use testcontainers::{ContainerAsync, GenericImage, core::ExecCommand};
 use url::Url;
 
 pub mod test_machine;
+pub mod vm;
 pub use test_machine::TestMachine;
 
 pub fn test_init() {
@@ -29,14 +31,6 @@ pub fn is_ci() -> bool {
 pub fn local_authentik_url() -> String {
     if is_ci() {
         env::var("AK_URL").unwrap_or_else(|_| "http://localhost:9000".to_string())
-    } else {
-        "http://host.docker.internal:9123".to_string()
-    }
-}
-
-pub fn container_authentik_url() -> String {
-    if is_ci() {
-        "http://host.docker.internal:9000".to_string()
     } else {
         "http://host.docker.internal:9123".to_string()
     }
@@ -95,11 +89,11 @@ pub async fn authenticated_session() -> Result<reqwest::Client> {
     Ok(fe.get_client())
 }
 
-/// Sets up the ak CLI agent in a container.
+/// Sets up the ak CLI agent in the test machine.
 ///
 /// Uses the OAuth device flow with the authenticated session auto-approving the
 /// consent, then sets AK_CLI_ACCESS_TOKEN / AK_CLI_REFRESH_TOKEN and runs
-/// `ak config setup` in the container.
+/// `ak config setup` in the test machine.
 pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
     tracing::info!("Setting up agent");
     let base_url = local_authentik_url();
@@ -166,11 +160,11 @@ pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
             .await
             .wrap_err("device flow polling failed")?;
 
-    let ak_url = container_authentik_url();
+    let ak_url = &tm.authentik_url;
     let access_token = token_response.access_token;
     let refresh_token = token_response.refresh_token.unwrap_or_default();
     must_exec(
-        &tm.container,
+        tm,
         &format!("ak config setup -a {}", ak_url),
         &[
             ("AK_CLI_ACCESS_TOKEN", &access_token),
@@ -182,15 +176,15 @@ pub async fn agent_setup(tm: &TestMachine) -> Result<()> {
     Ok(())
 }
 
-/// Enrolls a container in the authentik domain and waits for the akadmin user
+/// Enrolls the test machine in the authentik domain and waits for the akadmin user
 /// to appear in the NSS database.
 ///
 /// Call `cleanup_hosts().await` in your test's cleanup to remove the enrolled device.
 pub async fn join_domain(tm: &TestMachine) -> Result<()> {
     tracing::info!("Joining domain...");
-    let ak_url = container_authentik_url();
+    let ak_url = &tm.authentik_url;
     must_exec(
-        &tm.container,
+        tm,
         &format!("ak-sysd domains join ak -a {}", ak_url),
         &[("AK_SYS_INSECURE_ENV_TOKEN", "test-enroll-key")],
     )
@@ -202,9 +196,9 @@ pub async fn join_domain(tm: &TestMachine) -> Result<()> {
         if attempt > 0 {
             tokio::time::sleep(Duration::from_secs(2)).await;
         }
-        let (rc1, out1) = exec_command(&tm.container, "getent passwd", &[]).await?;
+        let (rc1, out1) = exec_command(tm, "getent passwd", &[]).await?;
         if rc1 == 0 && out1.contains("akadmin") {
-            let (rc2, out2) = exec_command(&tm.container, "getent passwd akadmin", &[]).await?;
+            let (rc2, out2) = exec_command(tm, "getent passwd akadmin", &[]).await?;
             if rc2 == 0 && out2.contains("akadmin") {
                 return Ok(());
             }
@@ -255,71 +249,26 @@ pub async fn cleanup_hosts() -> Result<()> {
     Ok(())
 }
 
-/// Executes a shell command in a container, returning (exit_code, stdout).
+/// Executes a shell command in the test machine, returning (exit_code, output).
 pub async fn exec_command(
-    container: &ContainerAsync<GenericImage>,
+    tm: &TestMachine,
     cmd: &str,
     env_vars: &[(&str, &str)],
 ) -> Result<(i64, String)> {
-    if !is_ci() {
-        tracing::info!("[exec] {}", cmd);
-    }
-    let exec_cmd = ExecCommand::new(["sh", "-c", cmd])
-        .with_env_vars(env_vars.iter().map(|(k, v)| (k.to_string(), v.to_string())))
-        .with_cmd_ready_condition(CmdWaitFor::Exit { code: None });
-
-    let mut result = container
-        .exec(exec_cmd)
-        .await
-        .wrap_err(format!("exec failed: '{}'", cmd))?;
-
-    let exit_code = result.exit_code().await.unwrap().unwrap();
-    if is_ci() {
-        eprintln!("::group::{cmd} (Exit code {exit_code})");
-    } else {
-        tracing::info!("[exec] {} exit={}", cmd, exit_code);
-    }
-    let stdout_str = String::from_utf8_lossy(&result.stdout_to_vec().await?).into_owned();
-    let stderr_str = String::from_utf8_lossy(&result.stderr_to_vec().await?).into_owned();
-    stdout_str
-        .lines()
-        .for_each(|l| tracing::info!("[stdout] {}", l));
-    stderr_str
-        .lines()
-        .for_each(|l| tracing::warn!("[stderr] {}", l));
-
-    if is_ci() {
-        eprintln!("::endgroup::");
-    }
-    let output = format!("{}{}", stdout_str, stderr_str);
-
-    Ok((exit_code, output))
+    tm.exec(cmd, env_vars).await
 }
 
-/// Executes a shell command in a container, returning stdout or an error on
-/// non-zero exit code.
-pub async fn must_exec(
-    container: &ContainerAsync<GenericImage>,
-    cmd: &str,
-    env_vars: &[(&str, &str)],
-) -> Result<String> {
-    let (exit_code, output) = exec_command(container, cmd, env_vars).await?;
-    if exit_code != 0 {
-        bail!(
-            "command '{}' exited with code {}: {}",
-            cmd,
-            exit_code,
-            output
-        );
-    }
-    Ok(output)
+/// Executes a shell command in the test machine, returning its output or an
+/// error on non-zero exit code.
+pub async fn must_exec(tm: &TestMachine, cmd: &str, env_vars: &[(&str, &str)]) -> Result<String> {
+    tm.must_exec(cmd, env_vars).await
 }
 
 /// Fails if the kernel logged an AppArmor denial for an authentik path
-pub async fn assert_no_apparmor_denials(container: &ContainerAsync<GenericImage>) -> Result<()> {
+pub async fn assert_no_apparmor_denials(tm: &TestMachine) -> Result<()> {
     // Scoped to authentik paths so unrelated host denials don't fail the test.
     let (exit_code, output) = exec_command(
-        container,
+        tm,
         r#"journalctl --no-pager | grep 'apparmor="DENIED"' \
             | grep -E 'name="(/att/[^"]*)?/(etc|run)/authentik/'"#,
         &[],
@@ -338,11 +287,11 @@ pub struct CmdTestCase {
     pub expects: Vec<String>,
 }
 
-/// Runs a series of command test cases against a container, asserting that each
+/// Runs a series of command test cases against the test machine, asserting that each
 /// expected string is present in the command's output.
 pub async fn cmd_test(tm: &TestMachine, cases: Vec<CmdTestCase>) -> Result<()> {
     for case in cases {
-        let output = must_exec(&tm.container, &case.cmd, &[]).await?;
+        let output = must_exec(tm, &case.cmd, &[]).await?;
         for expected in &case.expects {
             assert!(
                 output.contains(expected.as_str()),
