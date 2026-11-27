@@ -21,16 +21,22 @@ pub struct Vm {
     pub name: String,
 }
 
+/// Incus instance types.
+pub const VIRTUAL_MACHINE: &str = "virtual-machine";
+/// For images only published as containers (e.g. Amazon Linux).
+pub const CONTAINER: &str = "container";
+
 impl Vm {
-    /// Creates and starts a VM from `source` (an Incus instance source object).
-    pub async fn launch(name: String, source: Value) -> Result<Self> {
+    /// Creates and starts an instance of `kind` from `source` (an Incus
+    /// instance source object).
+    pub async fn launch(name: String, kind: &str, source: Value) -> Result<Self> {
         let cfg = unix_socket_configuration()?;
         let op: InstancesPut202Response = cfg
             .client
             .post(format!("{}/1.0/instances", cfg.base_path))
             .json(&json!({
                 "name": name,
-                "type": "virtual-machine",
+                "type": kind,
                 "start": true,
                 "config": { "limits.cpu": "2", "limits.memory": "2GiB" },
                 "source": source,

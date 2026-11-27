@@ -71,6 +71,18 @@ pub fn lookup_repo_dir(rel: &str) -> PathBuf {
     root.join(rel_clean)
 }
 
+/// The single `<ext>` package (`deb`/`rpm`) in `bin/<dir>/`.
+pub fn package_file(dir: &str, ext: &str) -> Result<PathBuf> {
+    let path = lookup_repo_dir(&format!("bin/{dir}"));
+    for entry in std::fs::read_dir(&path).wrap_err(format!("reading {}", path.display()))? {
+        let p = entry?.path();
+        if p.extension().is_some_and(|e| e == ext) {
+            return Ok(p);
+        }
+    }
+    bail!("no .{ext} in {}", path.display())
+}
+
 /// Creates a reqwest::Client with an active authentik session cookie by
 /// executing the default-authentication-flow step-by-step.
 pub async fn authenticated_session() -> Result<reqwest::Client> {

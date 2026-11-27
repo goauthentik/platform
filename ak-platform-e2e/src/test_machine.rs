@@ -5,8 +5,8 @@ use serde_json::json;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
-use crate::vm::{Vm, image_alias_exists};
-use crate::{is_ci, local_authentik_url, lookup_repo_dir};
+use crate::vm::{VIRTUAL_MACHINE, Vm, image_alias_exists};
+use crate::{is_ci, local_authentik_url, lookup_repo_dir, package_file};
 
 /// Where instrumented binaries and PAM/NSS modules write `.profraw` in the VM.
 /// Not under /tmp, which may be a tmpfs and is cleared on boot.
@@ -25,7 +25,12 @@ impl TestMachine {
     pub async fn new() -> Result<Self> {
         let alias = base_image().await.wrap_err("failed to build base image")?;
         let name = format!("ak-e2e-{}", &Uuid::new_v4().simple().to_string()[..12]);
-        let vm = Vm::launch(name, json!({ "type": "image", "alias": alias })).await?;
+        let vm = Vm::launch(
+            name,
+            VIRTUAL_MACHINE,
+            json!({ "type": "image", "alias": alias }),
+        )
+        .await?;
 
         // authentik runs on the host, reachable via the Incus bridge gateway.
         let (_, gw, _) = vm
@@ -145,18 +150,6 @@ impl Drop for TestMachine {
     }
 }
 
-/// The single `.deb` in `bin/<dir>/`.
-fn deb(dir: &str) -> Result<std::path::PathBuf> {
-    let path = lookup_repo_dir(&format!("bin/{dir}"));
-    for entry in std::fs::read_dir(&path).wrap_err(format!("reading {}", path.display()))? {
-        let p = entry?.path();
-        if p.extension().is_some_and(|e| e == "deb") {
-            return Ok(p);
-        }
-    }
-    bail!("no .deb in {}", path.display())
-}
-
 /// Returns the alias of a local image with the current debs installed,
 /// building it first if needed. Keyed by the debs' content, so rebuilt
 /// packages get a new image.
@@ -168,7 +161,7 @@ async fn base_image() -> Result<String> {
     let mut hash = Sha256::new();
     let mut debs = Vec::new();
     for pkg in PACKAGES {
-        let path = deb(pkg)?;
+        let path = package_file(pkg, "deb")?;
         let data = std::fs::read(&path)?;
         hash.update(&data);
         let file = path
@@ -190,6 +183,7 @@ async fn base_image() -> Result<String> {
     tracing::info!(alias, "building base image");
     let builder = Vm::launch(
         format!("{alias}-build"),
+        VIRTUAL_MACHINE,
         json!({
             "type": "image",
             "alias": format!("ubuntu/{version}"),

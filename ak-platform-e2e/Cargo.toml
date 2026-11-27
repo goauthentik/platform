@@ -25,10 +25,6 @@ uuid.workspace = true
 sha2.workspace = true
 hex.workspace = true
 
-[dev-dependencies]
-# Only for the multi-distro package install tests in tests/pkg.rs.
-testcontainers = { version = "0.28", default-features = false, features = ["aws-lc-rs"] }
-
 [target.'cfg(unix)'.dependencies]
 # Unix socket only, so no TLS backend.
 incus-client = { version = "0.1.1", default-features = false }
