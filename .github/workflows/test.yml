@@ -60,16 +60,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - parallel:
-          - uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.1
-            with:
-              rustflags: ""
-              build-warnings: warn
-          - uses: ./.github/actions/setup-toolchain
-            with:
-              platform: ${{ matrix.platform }}
-      # install-action writes ~/.cargo/bin, which the toolchain's rust-cache
-      # snapshots and restores, so it must not overlap with it.
+      - uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.1
+        with:
+          rustflags: ""
+          build-warnings: warn
+      - uses: ./.github/actions/setup-toolchain
+        with:
+          platform: ${{ matrix.platform }}
       - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2
         with:
           tool: cargo-llvm-cov nextest
@@ -160,16 +157,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-      - parallel:
-          - uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.1
-            with:
-              rustflags: ""
-              build-warnings: warn
-          - run: make ci-install-deps
+      - uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.1
+        with:
+          rustflags: ""
+          build-warnings: warn
+      - run: make ci-install-deps
       - uses: ./.github/actions/setup-toolchain
         with:
           platform: ${{ matrix.platform }}
-      # see test_rs: must not overlap with setup-rust-toolchain
       - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2
         with:
           tool: cargo-deny
@@ -252,7 +247,6 @@ jobs:
           pattern: authentik_{package-linux-ubuntu-26.04,ubuntu-26.04_ak-agent,ubuntu-26.04_ak-cli,ubuntu-26.04_ak-nss,ubuntu-26.04_ak-pam}-e2e
           path: bin/
           merge-multiple: true
-      # see test_rs: must not overlap with setup-rust-toolchain
       - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2
         with:
           tool: cargo-llvm-cov nextest
