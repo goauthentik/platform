@@ -8,6 +8,17 @@ use ak_platform::paths::{AgentSocketID, agent_socket_path};
 
 use super::Result;
 
+/// How a socket path is written in `ssh_config` and `SSH_AUTH_SOCK`. OpenSSH treats `\` in
+/// `ssh_config` as an escape character, so `\\.\pipe\...` would be read as `\.\pipe\...`.
+/// Windows also accepts forward slashes in pipe names, so `//./pipe/...` works in both places.
+fn ssh_spelling(path: String) -> String {
+    if cfg!(windows) {
+        path.replace('\\', "/")
+    } else {
+        path
+    }
+}
+
 #[derive(serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SshConfig {
@@ -33,14 +44,16 @@ pub async fn get_ssh_config(state: tauri::State<'_, Agent>) -> Result<SshConfig>
         .keys()
         .filter_map(|name| {
             let path = agent_socket_path(AgentSocketID::SSHProfile(name.clone())).ok()?;
-            Some((name.clone(), path.for_current()))
+            Some((name.clone(), ssh_spelling(path.for_current())))
         })
         .collect();
     drop(cfg);
     Ok(SshConfig {
-        socket_path: agent_socket_path(AgentSocketID::SSH)
-            .map_err(|e| e.to_string())?
-            .for_current(),
+        socket_path: ssh_spelling(
+            agent_socket_path(AgentSocketID::SSH)
+                .map_err(|e| e.to_string())?
+                .for_current(),
+        ),
         profile_socket_paths,
         system_socket_path: std::env::var("SSH_AUTH_SOCK").ok(),
         fallback_socket_path: fallback
@@ -117,11 +130,21 @@ pub async fn get_ssh_status(state: tauri::State<'_, Agent>) -> Result<SshStatusR
                 .lines()
                 .find_map(|l| l.strip_prefix("identityagent ").map(str::to_owned))
         });
+    // On Windows the config may spell the pipe with either kind of slash; compare the spelling
+    // that works (see `ssh_spelling`), and treat both as a mention of the socket.
+    let ssh_sockets: Vec<String> = sockets.iter().cloned().map(ssh_spelling).collect();
     let status = if !std::path::Path::new(&socket).exists() {
         SshStatus::NotRunning
-    } else if identity_agent.as_ref().is_some_and(|a| sockets.contains(a)) {
+    } else if identity_agent
+        .as_ref()
+        .is_some_and(|a| ssh_sockets.contains(&ssh_spelling(a.clone())))
+    {
         SshStatus::Active
-    } else if sockets.iter().any(|s| references_socket(s)) {
+    } else if sockets
+        .iter()
+        .chain(&ssh_sockets)
+        .any(|s| references_socket(s))
+    {
         SshStatus::Partial
     } else {
         SshStatus::Unconfigured
