@@ -2,16 +2,15 @@
 use std::collections::HashMap;
 
 use authentik_client::models::DiskRequest;
-use eyre::Result;
+use eyre::{Context, Result};
 use serde::Deserialize;
 use sysinfo::Disks;
 
 use crate::query::query_named;
 
-fn disks_base() -> Vec<DiskRequest> {
-    let disks = Disks::new_with_refreshed_list();
-    disks
-        .list()
+fn disks_base() -> Result<Vec<DiskRequest>> {
+    Ok(Disks::new_with_refreshed_list()
+        .context("failed to fetch disks")?
         .iter()
         .map(|disk| {
             let total = disk.total_space();
@@ -30,7 +29,7 @@ fn disks_base() -> Vec<DiskRequest> {
                 encryption_enabled: None,
             }
         })
-        .collect()
+        .collect())
 }
 
 /// osquery's `disk_encryption`/`block_devices` tables key rows by a bare
@@ -276,7 +275,7 @@ fn apply_windows_encryption(disks: &mut [DiskRequest]) -> Result<()> {
 }
 
 pub fn gather() -> Result<Vec<DiskRequest>> {
-    let mut disks = disks_base();
+    let mut disks = disks_base()?;
 
     #[cfg(any(target_os = "linux", target_os = "macos"))]
     apply_unix_encryption_and_label(&mut disks)?;
