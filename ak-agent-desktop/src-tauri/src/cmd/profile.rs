@@ -129,14 +129,7 @@ pub async fn setup_profile(
             ),
         )
         .await
-        .map_err(|e| format!("failed to save profile: {e:#}"))?;
-    // Saving the profile already triggers a config reload event, but it can arrive before the
-    // profile's token manager exists, in which case the UI shows the profile as failed. Emit it
-    // again now that the profile is ready.
-    if let Err(e) = app.emit("ak-config-reloaded", ()) {
-        tracing::warn!("failed to emit config reload event: {e}");
-    }
-    Ok(())
+        .map_err(|e| format!("failed to save profile: {e:#}"))
 }
 
 #[tauri::command]

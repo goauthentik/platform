@@ -119,6 +119,7 @@ mod tests {
     use crate::config::ConfigV1;
     use crate::token::global::GlobalTokenManager;
     use crate::token::testutils::gtm_test_lock;
+    use ak_platform::events::EventBus;
 
     fn header() -> Option<RequestHeader> {
         Some(RequestHeader {
@@ -157,10 +158,13 @@ mod tests {
     async fn cache_get_only_returns_valid_entries() {
         let _guard = gtm_test_lock().lock().unwrap_or_else(|e| e.into_inner());
         let cfg = test_config_manager::<ConfigV1>();
-        let gtm = GlobalTokenManager::new(Arc::clone(&cfg)).await.unwrap();
+        let gtm = GlobalTokenManager::new(Arc::clone(&cfg), EventBus::new())
+            .await
+            .unwrap();
         let server = AgentGRPCServer::new(Arc::new(Agent {
             cfg,
             gtm: Arc::new(gtm),
+            bus: EventBus::new(),
         }))
         .await
         .unwrap();

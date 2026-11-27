@@ -1,6 +1,7 @@
 pub mod client;
 pub mod config;
 pub mod dpop;
+pub mod events;
 pub mod generated;
 pub mod grpc;
 pub mod http;
