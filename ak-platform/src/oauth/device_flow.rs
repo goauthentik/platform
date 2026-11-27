@@ -13,6 +13,7 @@ use serde::Deserialize;
 use url::Url;
 
 use crate::dpop::{DpopKeyPair, build_proof};
+use crate::http::error_message;
 
 const DEFAULT_POLL_INTERVAL: Duration = Duration::from_secs(5);
 const SLOW_DOWN_INCREMENT: Duration = Duration::from_secs(5);
@@ -74,11 +75,13 @@ pub async fn request_device_authorization(
         .await?;
 
     if !res.status().is_success() {
+        let headers = res.headers().clone();
         let body = res.text().await.unwrap_or_default();
+        let message = error_message(&headers, &body);
         if let Ok(err) = serde_json::from_str::<TokenErrorResponse>(&body) {
-            return Err(OAuthError(err.error).into());
+            return Err(OAuthError(err.error, message).into());
         }
-        bail!("device authorization request failed: {body}");
+        bail!("device authorization request failed: {message}");
     }
 
     let parsed: DeviceAuthorizationResponse = res.json().await?;
@@ -99,13 +102,14 @@ pub async fn request_device_authorization(
 }
 
 /// An OAuth error code (RFC 6749 section 5.2) returned by the server, so
-/// callers can react to specific codes via `Report::downcast_ref`.
+/// callers can react to specific codes via `Report::downcast_ref`. The second
+/// field is the message shown to users (see [`error_message`]).
 #[derive(Debug)]
-pub struct OAuthError(pub String);
+pub struct OAuthError(pub String, String);
 
 impl std::fmt::Display for OAuthError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "device authorization request failed: {}", self.0)
+        write!(f, "device authorization request failed: {}", self.1)
     }
 }
 
@@ -175,6 +179,7 @@ pub async fn poll_for_device_token(
 
         let res = req.body(body).send().await?;
         let status = res.status();
+        let headers = res.headers().clone();
         let text = res.text().await?;
 
         if status.is_success() {
@@ -188,8 +193,12 @@ pub async fn poll_for_device_token(
             });
         }
 
-        let error: TokenErrorResponse = serde_json::from_str(&text)
-            .map_err(|_| eyre!("device token poll failed with status {status}: {text}"))?;
+        let error: TokenErrorResponse = serde_json::from_str(&text).map_err(|_| {
+            eyre!(
+                "device token poll failed with status {status}: {}",
+                error_message(&headers, &text)
+            )
+        })?;
 
         match error.error.as_str() {
             "authorization_pending" => continue,
@@ -199,7 +208,10 @@ pub async fn poll_for_device_token(
             }
             "access_denied" => bail!("authorization was denied"),
             "expired_token" => bail!("device code expired before authorization was completed"),
-            other => bail!("device token poll failed: {other}"),
+            _ => bail!(
+                "device token poll failed: {}",
+                error_message(&headers, &text)
+            ),
         }
     }
 }
@@ -306,6 +318,34 @@ mod tests {
 
         assert_eq!(result.access_token, "at123");
         assert_eq!(result.refresh_token.as_deref(), Some("rt123"));
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn poll_error_includes_description_and_request_id() -> Result<()> {
+        let server = MockServer::start().await;
+        Mock::given(method("POST"))
+            .and(path("/token/"))
+            .respond_with(ResponseTemplate::new(400).set_body_json(json!({
+                "error": "invalid_dpop_proof",
+                "error_description": "DPoP proof iat outside acceptable clock skew",
+                "request_id": "abc123"
+            })))
+            .mount(&server)
+            .await;
+
+        let url = Url::parse(&format!("{}/token/", server.uri()))?;
+        let auth = test_auth(Duration::from_millis(10))?;
+        let err = poll_for_device_token(&url, "client-id", &auth, None, "test-agent")
+            .await
+            .err()
+            .ok_or_else(|| eyre!("expected error"))?;
+
+        assert_eq!(
+            err.to_string(),
+            "device token poll failed: invalid_dpop_proof: DPoP proof iat outside acceptable \
+             clock skew (request ID abc123: give this to your authentik administrator)"
+        );
         Ok(())
     }
 
