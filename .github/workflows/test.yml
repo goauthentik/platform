@@ -369,3 +369,11 @@ jobs:
         # sg: the incus-admin membership above only applies to new logins.
         run: |
           sg incus-admin -c "cargo nextest run -p ak-platform-e2e --test vm_login --run-ignored only --no-capture"
+      - run: make test-e2e-convert
+        if: ${{ always() }}
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
+        if: ${{ always() }}
+        with:
+          use_oidc: true
+          flags: rs-e2e-vm
+          files: ${{ github.workspace }}/cache/rs-e2e-coverage.lcov

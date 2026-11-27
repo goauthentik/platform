@@ -23,6 +23,9 @@ use incus_client::models::{
 use incus_client::unix_socket::unix_socket_configuration;
 use serde_json::{Value, json};
 
+/// Where instrumented binaries and PAM/NSS modules write `.profraw` in the VM.
+const PROFILE_DIR: &str = "/tmp/ak-coverage/rs";
+
 struct Vm {
     cfg: Configuration,
     name: String,
@@ -72,11 +75,12 @@ impl Vm {
     async fn sh(&self, script: &str, env: &[(&str, &str)]) -> Result<String> {
         let mut exec = InstanceExecPost::new();
         exec.command = Some(vec!["sh".into(), "-c".into(), script.into()]);
-        exec.environment = Some(
-            env.iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect(),
-        );
+        // Every exec gets a profile path, so `ak-sysd` CLI calls and the PAM/NSS
+        // modules loaded by `login`/`getent` all report coverage.
+        let profile = format!("{PROFILE_DIR}/default_%m_%p.profraw");
+        let base = [("LLVM_PROFILE_FILE", profile.as_str())];
+        let env = base.iter().chain(env);
+        exec.environment = Some(env.map(|(k, v)| (k.to_string(), v.to_string())).collect());
         exec.record_output = Some(true);
         exec.wait_for_websocket = Some(false);
         exec.interactive = Some(false);
@@ -130,6 +134,32 @@ impl Vm {
         Ok(())
     }
 
+    /// Stops ak-sysd so it flushes its profile, then copies every `.profraw`
+    /// to where `make test-e2e-convert` picks them up.
+    async fn collect_coverage(&self) -> Result<()> {
+        self.sh("systemctl stop ak-sysd", &[]).await?;
+        let local = lookup_repo_dir("ak-platform-e2e/coverage/rs");
+        std::fs::create_dir_all(&local)?;
+        for file in self.sh(&format!("ls {PROFILE_DIR}"), &[]).await?.lines() {
+            // ponytail: raw request, `instance_files_get` discards the body.
+            let bytes = self
+                .cfg
+                .client
+                .get(format!(
+                    "{}/1.0/instances/{}/files",
+                    self.cfg.base_path, self.name
+                ))
+                .query(&[("path", format!("{PROFILE_DIR}/{file}"))])
+                .send()
+                .await?
+                .error_for_status()?
+                .bytes()
+                .await?;
+            std::fs::write(local.join(format!("vm-{file}")), bytes)?;
+        }
+        Ok(())
+    }
+
     async fn delete(self) -> Result<()> {
         let mut stop = InstanceStatePut::new();
         stop.action = Some("stop".into());
@@ -172,9 +202,10 @@ mod enterprise {
                 .await;
             eprintln!("{}", diag.unwrap_or_else(|e| format!("{e:?}")));
         }
+        let coverage = vm.collect_coverage().await;
         vm.delete().await?;
         cleanup_hosts().await?;
-        result
+        result.and(coverage)
     }
 }
 
@@ -186,6 +217,17 @@ async fn login(vm: &Vm) -> Result<()> {
         let file = src.file_name().context("deb name")?.to_string_lossy();
         vm.push(&src, &format!("/root/{file}")).await?;
     }
+    // Before install, so the postinst restart already runs with it. `%%p` is
+    // systemd's escape for a literal `%p`, which LLVM expands to the PID.
+    vm.sh(
+        &format!(
+            "mkdir -p -m 1777 {PROFILE_DIR} /etc/systemd/system/ak-sysd.service.d && \
+             echo '[Service]\nEnvironment=LLVM_PROFILE_FILE={PROFILE_DIR}/ak-sysd-%%p.profraw' \
+               > /etc/systemd/system/ak-sysd.service.d/coverage.conf"
+        ),
+        &[],
+    )
+    .await?;
     vm.wait_for("apt-get update", Duration::from_secs(120))
         .await?;
     vm.sh(
