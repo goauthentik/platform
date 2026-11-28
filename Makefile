@@ -132,6 +132,10 @@ test-integration:
 test-e2e: containers/e2e/build-packages
 	$(call cargo_test,ak-platform-e2e)
 
+# Builds the base VM image on its own, so test-e2e-ci only measures the tests.
+test-e2e-image:
+	RUSTFLAGS="$(RUST_BUILD_FLAGS)" cargo llvm-cov nextest --no-report -p ak-platform-e2e -E 'test(=test_base_image)'
+
 test-e2e-ci:
 	$(call cargo_test,ak-platform-e2e)
 

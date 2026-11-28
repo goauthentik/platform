@@ -166,7 +166,7 @@ impl Drop for TestMachine {
 ///
 /// ponytail: no locking; relies on e2e tests running one at a time
 /// (`--test-threads 1`). Old images are left behind locally.
-async fn base_image() -> Result<String> {
+pub async fn base_image() -> Result<String> {
     let version = std::env::var("AK_E2E_UBUNTU_VERSION").unwrap_or_else(|_| "24.04".into());
     // `cloud` or `desktop` (GNOME, no cloud-init); see images.linuxcontainers.org.
     let variant = std::env::var("AK_E2E_UBUNTU_VARIANT").unwrap_or_else(|_| "cloud".into());

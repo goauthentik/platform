@@ -293,6 +293,9 @@ jobs:
           AK_URL: ${{ steps.setup.outputs.http_url }}
         run: |
           ./hack/authentik/wait.sh
+      - name: Build base VM image
+        run: |
+          sg incus-admin -c "make test-e2e-image"
       - env:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
