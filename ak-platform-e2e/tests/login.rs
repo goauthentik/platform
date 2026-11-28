@@ -17,14 +17,22 @@ mod enterprise {
         let tm = TestMachine::new().await.expect("test machine");
         join_domain(&tm).await.expect("join domain");
 
-        // `script` gives `login` a pty. The marker only appears expanded when
-        // the logged-in shell runs it, never in the input echo.
+        // expect gives `login` a pty and waits for each prompt instead of
+        // guessing timings. The marker only appears expanded when the
+        // logged-in shell runs it, never in the input echo.
         let (_, password) = authentik_creds();
         let output = must_exec(
             &tm,
-            "{ sleep 3; printf '%s\\n' \"$AK_LOGIN_PW\"; sleep 20; \
-               printf 'echo LOGGED_IN_AS_$(id -un); exit\\n'; } \
-             | timeout 90 script -qefc 'login akadmin' /dev/null",
+            r#"expect -c '
+                set timeout 60
+                proc fail {msg} { puts "\nEXPECT: $msg"; exit 1 }
+                spawn login akadmin
+                expect { -re "assword: ?$" {} timeout { fail "no password prompt" } eof { fail "login exited before prompting" } }
+                send -- "$env(AK_LOGIN_PW)\r"
+                expect { -re {[$#] ?$} {} timeout { fail "no shell prompt after password" } eof { fail "login exited after password" } }
+                send -- "echo LOGGED_IN_AS_\$(id -un); exit\r"
+                expect { "LOGGED_IN_AS_akadmin" {} timeout { fail "marker not printed" } eof { fail "shell exited without marker" } }
+            '"#,
             &[("AK_LOGIN_PW", &password)],
         )
         .await

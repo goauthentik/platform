@@ -33,18 +33,19 @@ impl TestMachine {
         .await?;
 
         // authentik runs on the host, reachable via the Incus bridge gateway.
-        // NetworkManager (desktop images) may not have a route yet right after boot.
+        // Desktop images boot GNOME first and bring up NetworkManager late.
         let (code, gw, stderr) = vm
             .exec(
-                "for i in $(seq 60); do \
+                "for i in $(seq 150); do \
                    gw=$(ip -4 route show default | awk '{print $3; exit}'); \
                    [ -n \"$gw\" ] && echo \"$gw\" && exit 0; sleep 2; \
-                 done; ip -4 route; exit 1",
+                 done; ip -4 addr; ip -4 route; \
+                 journalctl -b --no-pager -u NetworkManager -u systemd-networkd | tail -40; exit 1",
                 &[],
             )
             .await?;
         if code != 0 {
-            bail!("no default route in VM after 120s: {gw}{stderr}");
+            bail!("no default route in VM after 300s:\n{gw}{stderr}");
         }
         let port = url::Url::parse(&local_authentik_url())?
             .port_or_known_default()
@@ -54,12 +55,8 @@ impl TestMachine {
             authentik_url: format!("http://{}:{port}", gw.trim()),
         };
 
-        // The image ships without host keys so each machine gets its own.
-        tm.must_exec(
-            "ssh-keygen -A && systemctl restart ssh ak-sysd ak-agent",
-            &[],
-        )
-        .await?;
+        tm.must_exec("systemctl restart ak-sysd ak-agent", &[])
+            .await?;
         for attempt in 0..20 {
             if attempt > 0 {
                 tokio::time::sleep(Duration::from_secs(3)).await;
@@ -251,7 +248,7 @@ async fn provision(vm: &Vm, debs: Vec<(String, Vec<u8>)>) -> Result<()> {
         ("apt update", "apt-get -o Acquire::Retries=3 update".to_string()),
         (
             "install packages",
-            "DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=3 install -y pamtester openssh-server /root/*.deb"
+            "DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=3 install -y pamtester expect openssh-server /root/*.deb"
                 .to_string(),
         ),
         (
@@ -261,7 +258,11 @@ async fn provision(vm: &Vm, debs: Vec<(String, Vec<u8>)>) -> Result<()> {
              systemctl daemon-reload\n\
              systemctl enable ak-agent\n\
              sed -i 's/false/true/g' /etc/authentik/config.json\n\
-             sed -i 's/pam_authentik.so/pam_authentik.so debug/g' /etc/pam.d/*"
+             sed -i 's/pam_authentik.so/pam_authentik.so debug/g' /etc/pam.d/*\n\
+             # The image ships without host keys; each machine makes its own at boot.\n\
+             mkdir -p /etc/systemd/system/ssh.service.d\n\
+             printf '[Service]\\nExecStartPre=\\nExecStartPre=/usr/bin/ssh-keygen -A\\nExecStartPre=/usr/sbin/sshd -t\\n' \
+               > /etc/systemd/system/ssh.service.d/host-keys.conf"
                 .to_string(),
         ),
         (
@@ -269,7 +270,9 @@ async fn provision(vm: &Vm, debs: Vec<(String, Vec<u8>)>) -> Result<()> {
             format!(
                 "systemctl stop ak-sysd ak-agent\n\
                  rm -f /root/*.deb {PROFILE_DIR}/* /etc/ssh/ssh_host_*\n\
-                 truncate -s 0 /etc/machine-id"
+                 truncate -s 0 /etc/machine-id\n\
+                 # Leases and per-device state from the builder's NIC.\n\
+                 rm -rf /var/lib/NetworkManager/* /var/lib/dhcp/*"
             ),
         ),
     ];
