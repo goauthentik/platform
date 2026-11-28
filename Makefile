@@ -134,7 +134,7 @@ test-e2e: containers/e2e/build-packages
 
 # Builds the base VM image on its own, so test-e2e-ci only measures the tests.
 test-e2e-image:
-	RUSTFLAGS="$(RUST_BUILD_FLAGS)" cargo llvm-cov nextest --no-report -p ak-platform-e2e -E 'test(=test_base_image)'
+	RUSTFLAGS="$(RUST_BUILD_FLAGS)" cargo llvm-cov run --no-report -p ak-platform-e2e --example build_base_image
 
 # Packaging runs in its own CI job; it doesn't depend on the Ubuntu matrix.
 test-e2e-ci:
