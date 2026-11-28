@@ -1,3 +1,5 @@
+#![cfg(unix)]
+
 use ak_platform_e2e::{
     CmdTestCase, TestMachine, agent_setup, assert_no_apparmor_denials, cleanup_hosts, cmd_test,
     join_domain, must_exec, test_init,
@@ -32,7 +34,7 @@ async fn test_auth_identity_agent() {
     .await
     .expect("cmd test");
 
-    assert_no_apparmor_denials(&tm.container)
+    assert_no_apparmor_denials(&tm)
         .await
         .expect("no apparmor denials");
 
@@ -105,7 +107,7 @@ async fn test_auth_local_only_user() {
     .await
     .expect("cmd test");
 
-    assert_no_apparmor_denials(&tm.container)
+    assert_no_apparmor_denials(&tm)
         .await
         .expect("no apparmor denials");
 

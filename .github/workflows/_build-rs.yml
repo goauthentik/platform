@@ -69,10 +69,12 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             cache/
-          key: target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.target }}
+          # The suffix keeps builds with different RUST_BUILD_FLAGS (e.g. the
+          # instrumented e2e build) from sharing, and clobbering, a cache.
+          key: target-cache${{ inputs.artifact_suffix }}-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.target }}
           restore-keys: |
-            target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-
-            target-cache-${{ matrix.platform }}-
+            target-cache${{ inputs.artifact_suffix }}-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-
+            target-cache${{ inputs.artifact_suffix }}-${{ matrix.platform }}-
       - name: Build builder image
         if: startsWith(matrix.platform, 'ubuntu')
         run: make containers/builder/build
@@ -140,4 +142,4 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             cache/
-          key: target-cache-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.target }}
+          key: target-cache${{ inputs.artifact_suffix }}-${{ matrix.platform }}-${{ hashFiles('**/Cargo.lock') }}-${{ matrix.target }}

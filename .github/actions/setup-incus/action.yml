@@ -1,0 +1,24 @@
+name: 'Set up Incus'
+description: 'Installs Incus with KVM access, usable by the runner user without sudo'
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+          | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger --name-match=kvm
+        test -c /dev/kvm
+        sudo apt-get update
+        # genisoimage builds the agent:config disk for VMs without incus-agent.
+        sudo apt-get install -y incus genisoimage
+        sudo incus admin init --minimal
+        # Joining incus-admin would only apply to new logins; open the admin
+        # socket instead (ephemeral runner). Path differs between packages.
+        for s in /run/incus/unix.socket /var/lib/incus/unix.socket; do
+          if [ -S "$s" ]; then sudo chmod 0666 "$s"; fi
+        done
+        # Docker sets FORWARD to DROP, which cuts the VMs off from apt.
+        sudo iptables -P FORWARD ACCEPT

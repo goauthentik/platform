@@ -210,7 +210,7 @@ jobs:
   build_rs_e2e:
     uses: ./.github/workflows/_build-rs.yml
     with:
-      rust_build_flags: "-C instrument-coverage -C codegen-units=1"
+      rust_build_flags: "-C instrument-coverage"
       artifact_suffix: "-e2e"
       platforms: '["ubuntu-26.04"]'
     secrets: inherit
@@ -221,19 +221,47 @@ jobs:
       artifact_suffix: "-e2e"
       platforms: '["ubuntu-26.04"]'
     secrets: inherit
+  test_rs_e2e_pkg:
+    name: Test (e2e packaging)
+    needs: [package_linux_e2e]
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.1
+        with:
+          rustflags: ""
+          build-warnings: warn
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
+        with:
+          pattern: authentik_package-linux-ubuntu-26.04-e2e
+          path: bin/
+          merge-multiple: true
+      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2
+        with:
+          tool: nextest
+      - uses: ./.github/actions/setup-incus
+      - run: |
+          make test-e2e-pkg
   test_rs_e2e:
-    name: Test (e2e ${{ matrix.ubuntu_version }})
+    name: Test (e2e ${{ matrix.ubuntu_version }} ${{ matrix.ubuntu_variant }})
     needs: [package_linux_e2e]
     strategy:
       fail-fast: false
       matrix:
         ubuntu_version:
+          # 25.10 is EOL and no longer on images.linuxcontainers.org.
           - "24.04"
-          - "25.10"
           - "26.04"
+        ubuntu_variant:
+          - cloud
+          - desktop
     runs-on: ubuntu-26.04
     env:
-      UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
+      # Read by ak-platform-e2e when building the base image (defaults: 24.04, cloud).
+      AK_E2E_UBUNTU_VERSION: ${{ matrix.ubuntu_version }}
+      AK_E2E_UBUNTU_VARIANT: ${{ matrix.ubuntu_variant }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
         with:
@@ -251,7 +279,7 @@ jobs:
         with:
           tool: cargo-llvm-cov nextest
       - run: chmod +x bin/agent/ak-agent bin/cli/ak bin/sysd/ak-sysd
-      # authentik startup and the e2e image build are independent; overlap them.
+      # authentik startup and the Incus setup are independent; overlap them.
       - parallel:
           - uses: goauthentik/action-setup-authentik@5b35e5951a1ec761847711a5d8170dbd67675526 # v3.3
             id: setup
@@ -263,21 +291,15 @@ jobs:
               enterprise_license: true
               enterprise_license_users_internal: 100
               enterprise_license_users_external: 100
-          - run: make containers/e2e/ci-build
+          - uses: ./.github/actions/setup-incus
       - env:
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
           AK_URL: ${{ steps.setup.outputs.http_url }}
         run: |
           ./hack/authentik/wait.sh
-      # AppArmor policy is host-global: and the container cannot load policy of
-      # its own (no securityfs during docker build)
-      - name: Load authentik AppArmor drop-in
+      - name: Build base VM image
         run: |
-          sudo install -m 0644 -D \
-            vpkg/linux/nss/_deb/apparmor/abstractions/nameservice.d/authentik \
-            /etc/apparmor.d/abstractions/nameservice.d/authentik
-          sudo systemctl reload apparmor.service
-          sudo aa-status | grep -q unix-chkpwd
+          make test-e2e-image
       - env:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
@@ -286,25 +308,23 @@ jobs:
           NEXTEST_PROFILE: ${{ steps.setup.outputs.enterprise_license_key == '' && 'no-enterprise' || 'default' }}
         run: |
           make test-e2e-ci
-      - run: |
-          sudo chmod -R 777 ./ak-platform-e2e/coverage
-          make test-e2e-convert
+      - run: make test-e2e-convert
       - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e-${{ matrix.ubuntu_version }}
+          flags: rs-e2e-${{ matrix.ubuntu_version }}-${{ matrix.ubuntu_variant }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
       - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e-${{ matrix.ubuntu_version }}
+          flags: rs-e2e-${{ matrix.ubuntu_version }}-${{ matrix.ubuntu_variant }}
           files: ${{ github.workspace }}/cache/llvm-cov-target.json
           report_type: test_results
       - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}
         with:
           use_oidc: true
-          flags: rs-e2e-${{ matrix.ubuntu_version }}
+          flags: rs-e2e-${{ matrix.ubuntu_version }}-${{ matrix.ubuntu_variant }}
           files: ${{ github.workspace }}/cache/rs-e2e-coverage.lcov

@@ -1,3 +1,5 @@
+#![cfg(unix)]
+
 use ak_platform_e2e::{CmdTestCase, TestMachine, agent_setup, cmd_test, test_init};
 
 #[tokio::test(flavor = "multi_thread")]

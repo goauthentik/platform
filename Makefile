@@ -129,11 +129,20 @@ lint:$(foreach target,$(TARGETS),${target}/lint)
 test-integration:
 	"$(MAKE)" test GO_TEST_FLAGS=-tags=integration
 
-test-e2e: containers/e2e/local-build
+test-e2e: containers/e2e/build-packages
 	$(call cargo_test,ak-platform-e2e)
 
+# Builds the base VM image on its own, so test-e2e-ci only measures the tests.
+test-e2e-image:
+	RUSTFLAGS="$(RUST_BUILD_FLAGS)" cargo llvm-cov run --no-report -p ak-platform-e2e --example build_base_image
+
+# Packaging runs in its own CI job; it doesn't depend on the Ubuntu matrix.
 test-e2e-ci:
-	$(call cargo_test,ak-platform-e2e)
+	$(call cargo_test,ak-platform-e2e -E 'not binary(pkg)')
+
+# Installs the packages on fresh distro images; no coverage, nothing instrumented runs.
+test-e2e-pkg:
+	cargo nextest run -p ak-platform-e2e --no-tests fail -E 'binary(pkg)' --test-threads 1
 
 test-e2e-convert:
 	$(call rs_e2e_coverage_convert)
