@@ -32,27 +32,14 @@ impl TestMachine {
         )
         .await?;
 
-        // authentik runs on the host, reachable via the Incus bridge gateway.
-        // Desktop images boot GNOME first and bring up NetworkManager late.
-        let (code, gw, stderr) = vm
-            .exec(
-                "for i in $(seq 150); do \
-                   gw=$(ip -4 route show default | awk '{print $3; exit}'); \
-                   [ -n \"$gw\" ] && echo \"$gw\" && exit 0; sleep 2; \
-                 done; ip -4 addr; ip -4 route; \
-                 journalctl -b --no-pager -u NetworkManager -u systemd-networkd | tail -40; exit 1",
-                &[],
-            )
-            .await?;
-        if code != 0 {
-            bail!("no default route in VM after 300s:\n{gw}{stderr}");
-        }
+        // authentik runs on the host, reachable via the Incus bridge.
+        let gw = vm.host_address().await?;
         let port = url::Url::parse(&local_authentik_url())?
             .port_or_known_default()
             .context("authentik port")?;
         let tm = TestMachine {
             vm: Some(vm),
-            authentik_url: format!("http://{}:{port}", gw.trim()),
+            authentik_url: format!("http://{gw}:{port}"),
         };
 
         tm.must_exec("systemctl restart ak-sysd ak-agent", &[])
@@ -170,7 +157,7 @@ impl Drop for TestMachine {
 /// (`--test-threads 1`). Old images are left behind locally.
 pub async fn base_image() -> Result<String> {
     let version = std::env::var("AK_E2E_UBUNTU_VERSION").unwrap_or_else(|_| "24.04".into());
-    // `cloud` or `desktop` (GNOME, no cloud-init); see images.linuxcontainers.org.
+    // `cloud` or `desktop` (GNOME; cloud-init is added during provisioning); see images.linuxcontainers.org.
     let variant = std::env::var("AK_E2E_UBUNTU_VARIANT").unwrap_or_else(|_| "cloud".into());
     let mut hash = Sha256::new();
     let mut debs = Vec::new();
@@ -253,7 +240,20 @@ async fn provision(vm: &Vm, debs: Vec<(String, Vec<u8>)>) -> Result<()> {
         ("apt update", "apt-get -o Acquire::Retries=3 update".to_string()),
         (
             "install packages",
-            "DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=3 install -y pamtester openssh-server /root/*.deb"
+            "DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=3 install -y pamtester openssh-server cloud-init /root/*.deb"
+                .to_string(),
+        ),
+        (
+            // Installed from the agent:config drive so every image runs the
+            // agent at boot, which reports the VM's addresses to Incus.
+            "install incus-agent",
+            "set -e\n\
+             mkdir -p /run/incus-agent-src\n\
+             # Same order as Incus' own loader: 9p share, else the CD-ROM.\n\
+             mount -t 9p config /run/incus-agent-src -o ro,access=0,trans=virtio \
+               || mount -o ro /dev/disk/by-label/incus-agent /run/incus-agent-src\n\
+             (cd /run/incus-agent-src && ./install.sh)\n\
+             umount /run/incus-agent-src"
                 .to_string(),
         ),
         (
@@ -279,7 +279,11 @@ async fn provision(vm: &Vm, debs: Vec<(String, Vec<u8>)>) -> Result<()> {
                  rm -f /root/*.deb {PROFILE_DIR}/* /etc/ssh/ssh_host_*\n\
                  truncate -s 0 /etc/machine-id\n\
                  # Leases and per-device state from the builder's NIC.\n\
-                 rm -rf /var/lib/NetworkManager/* /var/lib/dhcp/*"
+                 rm -rf /var/lib/NetworkManager/* /var/lib/dhcp/*\n\
+                 # Run cloud-init as a first boot on each test VM: Incus hands it\n\
+                 # the network config and hostname. Desktop images don't ship\n\
+                 # cloud-init and otherwise wait for NetworkManager.\n\
+                 cloud-init clean --logs"
             ),
         ),
     ];

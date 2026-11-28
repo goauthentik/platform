@@ -196,6 +196,59 @@ impl Vm {
         Ok(())
     }
 
+    async fn get_json(&self, path: &str) -> Result<Value> {
+        let resp: Value = self
+            .cfg
+            .client
+            .get(format!("{}{path}", self.cfg.base_path))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+        Ok(resp["metadata"].clone())
+    }
+
+    /// Waits until incus-agent reports a global IPv4 address in the VM, then
+    /// returns the host's address on the VM's Incus network.
+    pub async fn host_address(&self) -> Result<String> {
+        let start = Instant::now();
+        loop {
+            let state = self
+                .get_json(&format!("/1.0/instances/{}/state", self.name))
+                .await?;
+            let has_ipv4 = state["network"].as_object().is_some_and(|ifaces| {
+                ifaces
+                    .values()
+                    .flat_map(|i| i["addresses"].as_array().into_iter().flatten())
+                    .any(|a| a["family"] == "inet" && a["scope"] == "global")
+            });
+            if has_ipv4 {
+                break;
+            }
+            if start.elapsed() > Duration::from_secs(300) {
+                bail!(
+                    "{} has no IPv4 address after 300s: {}",
+                    self.name,
+                    state["network"]
+                );
+            }
+            tokio::time::sleep(Duration::from_secs(3)).await;
+        }
+        let instance = self
+            .get_json(&format!("/1.0/instances/{}", self.name))
+            .await?;
+        let network = instance["expanded_devices"]
+            .as_object()
+            .and_then(|devs| devs.values().find_map(|d| d["network"].as_str()))
+            .context("instance has no managed network NIC")?;
+        let net = self.get_json(&format!("/1.0/networks/{network}")).await?;
+        let cidr = net["config"]["ipv4.address"]
+            .as_str()
+            .context("network has no ipv4.address")?;
+        Ok(cidr.split('/').next().unwrap_or(cidr).to_string())
+    }
+
     /// Attaches to the VM's serial console, like `incus console`.
     pub async fn console(&self) -> Result<Console> {
         let op: Value = self
