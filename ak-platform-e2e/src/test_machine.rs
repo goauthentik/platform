@@ -5,7 +5,7 @@ use serde_json::json;
 use sha2::{Digest, Sha256};
 use uuid::Uuid;
 
-use crate::vm::{VIRTUAL_MACHINE, Vm, image_alias_exists};
+use crate::vm::{Console, VIRTUAL_MACHINE, Vm, image_alias_exists};
 use crate::{is_ci, local_authentik_url, lookup_repo_dir, package_file};
 
 /// Where instrumented binaries and PAM/NSS modules write `.profraw` in the VM.
@@ -66,6 +66,11 @@ impl TestMachine {
             }
         }
         bail!("ak-sysd not ready after 60 seconds")
+    }
+
+    /// The VM's serial console, where a getty runs like on real hardware.
+    pub async fn console(&self) -> Result<Console> {
+        self.vm()?.console().await
     }
 
     fn vm(&self) -> Result<&Vm> {
@@ -248,7 +253,7 @@ async fn provision(vm: &Vm, debs: Vec<(String, Vec<u8>)>) -> Result<()> {
         ("apt update", "apt-get -o Acquire::Retries=3 update".to_string()),
         (
             "install packages",
-            "DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=3 install -y pamtester expect openssh-server /root/*.deb"
+            "DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=3 install -y pamtester openssh-server /root/*.deb"
                 .to_string(),
         ),
         (
@@ -257,6 +262,8 @@ async fn provision(vm: &Vm, debs: Vec<(String, Vec<u8>)>) -> Result<()> {
              cp /etc/systemd/user/ak-agent.service /usr/lib/systemd/system\n\
              systemctl daemon-reload\n\
              systemctl enable ak-agent\n\
+             # The interactive login test logs in on the serial console.\n\
+             systemctl enable serial-getty@ttyS0.service\n\
              sed -i 's/false/true/g' /etc/authentik/config.json\n\
              sed -i 's/pam_authentik.so/pam_authentik.so debug/g' /etc/pam.d/*\n\
              # The image ships without host keys; each machine makes its own at boot.\n\

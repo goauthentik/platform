@@ -1,5 +1,7 @@
 #![cfg(unix)]
 
+use std::time::Duration;
+
 use ak_platform_e2e::{
     TestMachine, assert_no_apparmor_denials, authentik_creds, cleanup_hosts, exec_command,
     join_domain, must_exec, test_init,
@@ -9,39 +11,48 @@ use ak_platform_e2e::{
 mod enterprise {
     use super::*;
 
-    /// A full interactive `/bin/login` on a pty: auth against authentik plus
-    /// session setup, ending in a shell as the authentik user.
+    /// A full interactive login on the VM's serial console (getty + `login`):
+    /// auth against authentik plus session setup, ending in a shell as the
+    /// authentik user.
     #[tokio::test(flavor = "multi_thread")]
     async fn test_interactive_login_shell() {
         test_init();
         let tm = TestMachine::new().await.expect("test machine");
         join_domain(&tm).await.expect("join domain");
 
-        // expect gives `login` a pty and waits for each prompt instead of
-        // guessing timings. The marker only appears expanded when the
-        // logged-in shell runs it, never in the input echo.
+        // Log in on the serial console, the way a person at the machine
+        // would: getty prompts for the user, then `login` runs PAM. The
+        // marker only appears expanded when the logged-in shell runs it,
+        // never in the input echo.
         let (_, password) = authentik_creds();
-        let output = must_exec(
-            &tm,
-            r#"expect -c '
-                set timeout 60
-                proc fail {msg} { puts "\nEXPECT: $msg"; exit 1 }
-                spawn login akadmin
-                expect { -re "assword: ?$" {} timeout { fail "no password prompt" } eof { fail "login exited before prompting" } }
-                send -- "$env(AK_LOGIN_PW)\r"
-                expect { -re {[$#] ?$} {} timeout { fail "no shell prompt after password" } eof { fail "login exited after password" } }
-                send -- "echo LOGGED_IN_AS_\$(id -un); exit\r"
-                expect { "LOGGED_IN_AS_akadmin" {} timeout { fail "marker not printed" } eof { fail "shell exited without marker" } }
-            '"#,
-            &[("AK_LOGIN_PW", &password)],
-        )
-        .await
-        .expect("exec login");
+        let wait = Duration::from_secs(60);
+        let mut console = tm.console().await.expect("attach console");
+        console.send("\r").await.expect("send");
+        console
+            .expect(&["login: "], wait)
+            .await
+            .expect("getty prompt");
+        console.send("akadmin\r").await.expect("send");
+        console
+            .expect(&["assword:"], wait)
+            .await
+            .expect("password prompt");
+        console.send(&format!("{password}\r")).await.expect("send");
+        let outcome = console
+            .expect(&["$ ", "# ", "Login incorrect"], wait)
+            .await
+            .expect("shell prompt");
+        assert_ne!(outcome, 2, "login rejected:\n{}", console.transcript());
+        console
+            .send("echo LOGGED_IN_AS_$(id -un)\r")
+            .await
+            .expect("send");
+        console
+            .expect(&["LOGGED_IN_AS_akadmin"], wait)
+            .await
+            .expect("shell runs as akadmin");
+        console.send("exit\r").await.expect("send");
 
-        assert!(
-            output.contains("LOGGED_IN_AS_akadmin"),
-            "interactive login did not reach a shell: {output}"
-        );
         assert_no_apparmor_denials(&tm)
             .await
             .expect("no apparmor denials");

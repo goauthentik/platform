@@ -8,13 +8,17 @@
 use std::time::{Duration, Instant};
 
 use eyre::{ContextCompat, Result, bail};
+use futures_util::{SinkExt, StreamExt};
 use incus_client::apis::configuration::Configuration;
 use incus_client::apis::{instances_api, operations_api};
 use incus_client::models::{
     InstanceExecPost, InstanceStatePut, InstancesPut202Response, Operation,
 };
-use incus_client::unix_socket::unix_socket_configuration;
+use incus_client::unix_socket::{resolve_socket_path, unix_socket_configuration};
 use serde_json::{Value, json};
+use tokio::net::UnixStream;
+use tokio_tungstenite::tungstenite::Message;
+use tokio_tungstenite::{WebSocketStream, client_async};
 
 pub struct Vm {
     cfg: Configuration,
@@ -192,6 +196,42 @@ impl Vm {
         Ok(())
     }
 
+    /// Attaches to the VM's serial console, like `incus console`.
+    pub async fn console(&self) -> Result<Console> {
+        let op: Value = self
+            .cfg
+            .client
+            .post(format!(
+                "{}/1.0/instances/{}/console",
+                self.cfg.base_path, self.name
+            ))
+            .json(&json!({ "type": "console", "width": 160, "height": 50, "force": true }))
+            .send()
+            .await?
+            .error_for_status()?
+            .json()
+            .await?;
+        let id = op["metadata"]["id"]
+            .as_str()
+            .context("no console operation id")?;
+        let fds = &op["metadata"]["metadata"]["fds"];
+        let connect = async |fd: &str| -> Result<WebSocketStream<UnixStream>> {
+            let secret = fds[fd].as_str().context("no console secret")?;
+            let stream = UnixStream::connect(resolve_socket_path(None).0).await?;
+            let url = format!("ws://unix.socket/1.0/operations/{id}/websocket?secret={secret}");
+            Ok(client_async(url, stream).await?.0)
+        };
+        // Incus only starts forwarding once both data and control are attached.
+        let data = connect("0").await?;
+        let control = connect("control").await?;
+        Ok(Console {
+            data,
+            _control: control,
+            transcript: String::new(),
+            pos: 0,
+        })
+    }
+
     pub async fn delete(self) -> Result<()> {
         // Fails if already stopped (e.g. after `publish`), which is fine.
         let _ = self.stop(true).await;
@@ -209,4 +249,62 @@ pub async fn image_alias_exists(alias: &str) -> Result<bool> {
         .send()
         .await?;
     Ok(resp.status().is_success())
+}
+
+/// A VM serial console session with expect-style matching.
+pub struct Console {
+    data: WebSocketStream<UnixStream>,
+    _control: WebSocketStream<UnixStream>,
+    /// Everything received so far, for matching and failure reports.
+    transcript: String,
+    /// Start of the not yet matched part of `transcript`.
+    pos: usize,
+}
+
+impl Console {
+    pub async fn send(&mut self, input: &str) -> Result<()> {
+        self.data
+            .send(Message::binary(input.as_bytes().to_vec()))
+            .await?;
+        Ok(())
+    }
+
+    /// Waits for the first of `patterns` in output not matched yet and
+    /// returns its index.
+    pub async fn expect(&mut self, patterns: &[&str], timeout: Duration) -> Result<usize> {
+        let deadline = tokio::time::Instant::now() + timeout;
+        loop {
+            let unmatched = &self.transcript[self.pos..];
+            let found = patterns
+                .iter()
+                .enumerate()
+                .filter_map(|(i, p)| unmatched.find(p).map(|at| (i, at + p.len())))
+                .min_by_key(|&(_, end)| end);
+            if let Some((i, end)) = found {
+                self.pos += end;
+                return Ok(i);
+            }
+            match tokio::time::timeout_at(deadline, self.data.next()).await {
+                Err(_) => bail!(
+                    "console: none of {patterns:?} within {timeout:?}, output:\n{}",
+                    self.transcript
+                ),
+                Ok(None) => bail!(
+                    "console closed waiting for {patterns:?}, output:\n{}",
+                    self.transcript
+                ),
+                // ponytail: lossy per frame, so a UTF-8 char split across
+                // frames turns into U+FFFD; fine for ASCII prompts.
+                Ok(Some(msg)) => match msg? {
+                    Message::Binary(b) => self.transcript.push_str(&String::from_utf8_lossy(&b)),
+                    Message::Text(t) => self.transcript.push_str(t.as_str()),
+                    _ => {}
+                },
+            }
+        }
+    }
+
+    pub fn transcript(&self) -> &str {
+        &self.transcript
+    }
 }
