@@ -226,6 +226,29 @@ jobs:
       artifact_suffix: "-e2e"
       platforms: '["ubuntu-26.04"]'
     secrets: inherit
+  test_rs_e2e_pkg:
+    name: Test (e2e packaging)
+    needs: [package_linux_e2e]
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions-rust-lang/setup-rust-toolchain@a188e68d0fd2bd36ad51dccb2b07ba6e75105f30 # v2.0.1
+        with:
+          rustflags: ""
+          build-warnings: warn
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v6
+        with:
+          pattern: authentik_package-linux-ubuntu-26.04-e2e
+          path: bin/
+          merge-multiple: true
+      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c # v2
+        with:
+          tool: nextest
+      - uses: ./.github/actions/setup-incus
+      - run: |
+          make test-e2e-pkg
   test_rs_e2e:
     name: Test (e2e ${{ matrix.ubuntu_version }} ${{ matrix.ubuntu_variant }})
     needs: [package_linux_e2e]
@@ -274,20 +297,7 @@ jobs:
               enterprise_license: true
               enterprise_license_users_internal: 100
               enterprise_license_users_external: 100
-          - name: Set up Incus
-            run: |
-              echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
-                | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-              sudo udevadm control --reload-rules
-              sudo udevadm trigger --name-match=kvm
-              test -c /dev/kvm
-              sudo apt-get update
-              # genisoimage builds the agent:config disk for VMs without incus-agent.
-              sudo apt-get install -y incus genisoimage
-              sudo incus admin init --minimal
-              sudo usermod -aG incus-admin "$USER"
-              # Docker sets FORWARD to DROP, which cuts the VMs off from apt.
-              sudo iptables -P FORWARD ACCEPT
+          - uses: ./.github/actions/setup-incus
       - env:
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
           AK_URL: ${{ steps.setup.outputs.http_url }}
@@ -295,16 +305,15 @@ jobs:
           ./hack/authentik/wait.sh
       - name: Build base VM image
         run: |
-          sg incus-admin -c "make test-e2e-image"
+          make test-e2e-image
       - env:
           AK_PASSWORD: ${{ steps.setup.outputs.admin_password }}
           AK_TOKEN: ${{ steps.setup.outputs.admin_token }}
           AK_URL: ${{ steps.setup.outputs.http_url }}
           # License retrieval needs an OIDC token, which external PRs don't get
           NEXTEST_PROFILE: ${{ steps.setup.outputs.enterprise_license_key == '' && 'no-enterprise' || 'default' }}
-        # sg: the incus-admin membership above only applies to new logins.
         run: |
-          sg incus-admin -c "make test-e2e-ci"
+          make test-e2e-ci
       - run: make test-e2e-convert
       - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v5
         if: ${{ always() }}

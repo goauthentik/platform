@@ -136,8 +136,13 @@ test-e2e: containers/e2e/build-packages
 test-e2e-image:
 	RUSTFLAGS="$(RUST_BUILD_FLAGS)" cargo llvm-cov nextest --no-report -p ak-platform-e2e -E 'test(=test_base_image)'
 
+# Packaging runs in its own CI job; it doesn't depend on the Ubuntu matrix.
 test-e2e-ci:
-	$(call cargo_test,ak-platform-e2e)
+	$(call cargo_test,ak-platform-e2e -E 'not binary(pkg)')
+
+# Installs the packages on fresh distro images; no coverage, nothing instrumented runs.
+test-e2e-pkg:
+	cargo nextest run -p ak-platform-e2e --no-tests fail -E 'binary(pkg)' --test-threads 1
 
 test-e2e-convert:
 	$(call rs_e2e_coverage_convert)
