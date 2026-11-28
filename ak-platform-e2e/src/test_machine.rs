@@ -33,9 +33,19 @@ impl TestMachine {
         .await?;
 
         // authentik runs on the host, reachable via the Incus bridge gateway.
-        let (_, gw, _) = vm
-            .exec("ip -4 route show default | awk '{print $3}'", &[])
+        // NetworkManager (desktop images) may not have a route yet right after boot.
+        let (code, gw, stderr) = vm
+            .exec(
+                "for i in $(seq 60); do \
+                   gw=$(ip -4 route show default | awk '{print $3; exit}'); \
+                   [ -n \"$gw\" ] && echo \"$gw\" && exit 0; sleep 2; \
+                 done; ip -4 route; exit 1",
+                &[],
+            )
             .await?;
+        if code != 0 {
+            bail!("no default route in VM after 120s: {gw}{stderr}");
+        }
         let port = url::Url::parse(&local_authentik_url())?
             .port_or_known_default()
             .context("authentik port")?;

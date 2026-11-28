@@ -24,7 +24,7 @@ mod enterprise {
             &tm,
             "{ sleep 3; printf '%s\\n' \"$AK_LOGIN_PW\"; sleep 20; \
                printf 'echo LOGGED_IN_AS_$(id -un); exit\\n'; } \
-             | script -qefc 'login akadmin' /dev/null",
+             | timeout 90 script -qefc 'login akadmin' /dev/null",
             &[("AK_LOGIN_PW", &password)],
         )
         .await

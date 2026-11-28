@@ -9,8 +9,8 @@ use eyre::{ContextCompat, Result, bail};
 use serde_json::json;
 use uuid::Uuid;
 
-/// Installed one at a time, in this order.
-const PACKAGES: [&str; 5] = ["cli", "agent", "sysd", "pam", "nss"];
+/// Installed one at a time, in dependency order (the rpm pam package requires nss).
+const PACKAGES: [&str; 5] = ["cli", "agent", "sysd", "nss", "pam"];
 
 /// Boots `alias` from images.linuxcontainers.org and runs `install <file>` for
 /// each package.
