@@ -19,6 +19,5 @@ uuid.workspace = true
 
 [build-dependencies]
 ak-api-cli-gen.workspace = true
-erased-serde.workspace = true
 eyre.workspace = true
 cargo_metadata = "0.23"

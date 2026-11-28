@@ -59,7 +59,6 @@ authentik-client = { git = "https://github.com/goauthentik/client-rust", rev = "
 ] }
 chrono = { version = "0.4.45", features = ["serde"] }
 clap = { version = "4.6.1", features = ["derive", "env"] }
-color-eyre = "= 0.6.5"
 erased-serde = "0.4.10"
 eyre = "= 0.6.14"
 hyper-util = "0.1.20"
@@ -109,7 +108,6 @@ sysinfo = { version = "0.40.4", default-features = false }
 tauri = "2"
 tauri-build = "2"
 tokio-util = "0.7"
-tower-http = "0.7.0"
 windows_exe_info = "0.5.2"
 zbus = "5"
 winreg = { version = "0.56", features = ["serialization-serde"] }

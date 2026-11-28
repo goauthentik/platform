@@ -17,7 +17,9 @@ where
             tx.blocking_send(evr).ok();
         })?;
         w.watch(
-            Path::new(&self.path).parent().unwrap(),
+            Path::new(&self.path)
+                .parent()
+                .ok_or(eyre::eyre!("Failed to get parent of {}", self.path))?,
             RecursiveMode::NonRecursive,
         )?;
 

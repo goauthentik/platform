@@ -1,3 +1,4 @@
+use eyre::Result;
 use tauri::{AppHandle, Emitter, Manager};
 use url::Url;
 
@@ -6,15 +7,16 @@ use crate::{cmd::page::PendingPage, ui};
 pub const SCHEME: &str = "io.goauthentik.platform:";
 
 /// Route an `io.goauthentik.platform://<route>` URL.
-pub fn handle(app: &AppHandle, url: &Url) {
+pub fn handle(app: &AppHandle, url: &Url) -> Result<()> {
     match url.host_str() {
-        Some("open") => open(app, url),
+        Some("open") => open(app, url)?,
         _ => tracing::warn!("unknown deep link: {url}"),
-    }
+    };
+    Ok(())
 }
 
 /// `open?page=<page>`: show the main window, optionally on `page`.
-fn open(app: &AppHandle, url: &Url) {
+fn open(app: &AppHandle, url: &Url) -> Result<()> {
     if let Some((_, page)) = url.query_pairs().find(|(k, _)| k == "page")
         && let Ok(mut pending) = app.state::<PendingPage>().0.lock()
     {
@@ -24,5 +26,5 @@ fn open(app: &AppHandle, url: &Url) {
     if let Err(e) = app.emit("ak-navigate", ()) {
         tracing::warn!("failed to emit navigate event: {e}");
     }
-    ui::show_main(app);
+    ui::show_main(app)
 }

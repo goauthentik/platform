@@ -56,7 +56,9 @@ pub fn setup_menu(app: &mut App) -> std::result::Result<(), Box<dyn std::error::
 
     app.on_menu_event(|app, event| {
         if event.id() == "hide_to_tray" {
-            super::hide_to_tray(app);
+            super::hide_to_tray(app).unwrap_or_else(|e| {
+                tracing::warn!("failed to hide window: {e:?}");
+            });
         } else if event.id() == "quit" {
             app.exit(0);
         }

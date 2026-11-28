@@ -1,3 +1,4 @@
+use eyre::Result;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
 pub const WINDOW_LABEL: &str = "main";
@@ -9,19 +10,20 @@ pub const WINDOW_TITLE: &str = "authentik Agent";
 #[cfg(target_os = "macos")]
 pub mod macos;
 
-pub fn hide_to_tray(app: &tauri::AppHandle) {
+pub fn hide_to_tray(app: &tauri::AppHandle) -> Result<()> {
     if let Some(win) = app.get_webview_window(WINDOW_LABEL) {
-        let _ = win.hide();
+        win.hide()?;
     }
     #[cfg(target_os = "macos")]
-    let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+    app.set_activation_policy(tauri::ActivationPolicy::Accessory)?;
+    Ok(())
 }
 
-pub fn show_main(app: &tauri::AppHandle) {
+pub fn show_main(app: &tauri::AppHandle) -> Result<()> {
     #[cfg(target_os = "macos")]
     {
-        let _ = app.set_activation_policy(tauri::ActivationPolicy::Regular);
-        let _ = app.show();
+        app.set_activation_policy(tauri::ActivationPolicy::Regular)?;
+        app.show()?;
     }
     let win = match app.get_webview_window(WINDOW_LABEL) {
         Some(w) => w,
@@ -34,9 +36,10 @@ pub fn show_main(app: &tauri::AppHandle) {
                 .hidden_title(true)
                 .title_bar_style(tauri::TitleBarStyle::Overlay)
                 .traffic_light_position(tauri::LogicalPosition::new(16, 28));
-            b.build().unwrap()
+            b.build()?
         }
     };
-    let _ = win.show();
-    let _ = win.set_focus();
+    win.show()?;
+    win.set_focus()?;
+    Ok(())
 }
